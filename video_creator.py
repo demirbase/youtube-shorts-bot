@@ -1,13 +1,11 @@
 # video_creator.py
-# Generates audio with edge-tts and assembles the video with FFmpeg.
+# Generates audio with gTTS (Google Text-to-Speech) and assembles the video with FFmpeg.
 
 import subprocess
-import asyncio
-import edge_tts
+from gtts import gTTS
 import re
 
 # Configuration for the TTS
-VOICE = "en-US-JennyNeural"  # A high-quality, natural-sounding voice
 OUTPUT_AUDIO_FILE = "output.mp3"
 OUTPUT_SRT_FILE = "output.srt"
 OUTPUT_VIDEO_FILE = "output.mp4"
@@ -66,11 +64,11 @@ def generate_srt(text: str, audio_duration: float, max_words_per_line=5) -> str:
     print(f"Subtitles saved to {OUTPUT_SRT_FILE}")
     return OUTPUT_SRT_FILE
 
-async def _generate_audio(text: str, file_path: str):
-    """Async helper to generate and save audio using edge-tts."""
-    print("Generating audio with edge-tts...")
-    communicate = edge_tts.Communicate(text, VOICE)
-    await communicate.save(file_path)
+def _generate_audio(text: str, file_path: str):
+    """Generate and save audio using Google Text-to-Speech."""
+    print("Generating audio with Google TTS...")
+    tts = gTTS(text=text, lang='en', slow=False)
+    tts.save(file_path)
     print(f"Audio saved to {file_path}")
 
 def get_audio_duration(file_path: str) -> float:
@@ -102,7 +100,7 @@ def create_video_from_post(post_data: dict) -> str | None:
         full_text = f"{post_data['title']}. {post_data['body']}"
         
         # 1. Generate Audio
-        asyncio.run(_generate_audio(full_text, OUTPUT_AUDIO_FILE))
+        _generate_audio(full_text, OUTPUT_AUDIO_FILE)
         
         # 2. Get Audio Duration
         audio_duration = get_audio_duration(OUTPUT_AUDIO_FILE)
