@@ -79,12 +79,13 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
             print(f"✅ Found new eligible post: {submission.id}")
             print(f"   Title: {submission.title[:80]}...")
             
-            # Get top comments
+            # Get top comments with author info
             submission.comments.replace_more(limit=0)  # Remove "load more comments" objects
             top_comments = submission.comments.list()[:5]  # Get top 5 comments
             
             post_body = ""
             comment_count = 0
+            comments_data = []  # Store comment data with authors
             
             for comment in top_comments:
                 if hasattr(comment, 'body') and not comment.stickied:
@@ -92,6 +93,10 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
                     # Skip short comments, deleted, or removed
                     if len(comment_text) > 30 and comment_text not in ['[deleted]', '[removed]']:
                         post_body += comment_text + "\n\n"
+                        comments_data.append({
+                            'body': comment_text,
+                            'author': str(comment.author) if comment.author else 'deleted'
+                        })
                         comment_count += 1
                         if comment_count >= 3:  # Limit to 3 substantial comments
                             break
@@ -110,7 +115,9 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
                 "id": submission.id,
                 "title": submission.title,
                 "body": post_body,
-                "url": f"https://reddit.com{submission.permalink}"
+                "url": f"https://reddit.com{submission.permalink}",
+                "subreddit": subreddit,
+                "comments": comments_data
             }
         
         print(f"⚠️  No new, eligible posts found (checked {posts_checked} posts)")
