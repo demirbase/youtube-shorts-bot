@@ -1,413 +1,204 @@
-# Reddit-to-YouTube Shorts Bot
+# Reddit-to-YouTube Shorts Bot 🤖
 
-An **100% free**, fully automated content pipeline that converts top Reddit posts into YouTube Shorts videos. This system uses GitHub Actions for compute and scheduling, scrapes Reddit's public endpoints, generates speech with Microsoft Edge TTS, and uploads to YouTube via the official API.
+A **100% free**, fully automated content pipeline that converts top Reddit posts into YouTube Shorts videos with AI narration.
 
 ## 🎯 What This Bot Does
 
-1. **Scrapes** top posts from r/AskReddit (configurable)
-2. **Generates** AI voice narration using Microsoft Edge TTS
-3. **Creates** 9:16 vertical videos with subtitles burned in
+1. **Scrapes** top posts from r/AskReddit using Reddit's official API
+2. **Generates** AI voice narration using Google Text-to-Speech
+3. **Creates** 9:16 vertical videos with burned-in subtitles
 4. **Uploads** to YouTube as private videos
 5. **Runs automatically** every 6 hours via GitHub Actions
-6. **Tracks state** to prevent duplicate content
+6. **Tracks used posts** to prevent duplicates
 
-## ⚠️ Critical Warnings
+## ✅ Current Status
 
-Before using this system, understand these risks:
+**Working and tested!** All components are functional:
+- ✅ Reddit API authentication
+- ✅ Post fetching with duplicate prevention
+- ✅ Google TTS audio generation
+- ✅ Video creation with FFmpeg
+- ✅ YouTube API authentication
+- ✅ Automated uploads
+- ✅ GitHub Actions automation
 
-### 1. **Fragile Architecture**
-- **Reddit Scraping**: Uses unofficial `.json` endpoints that can be rate-limited or blocked at any time
-- **Edge TTS**: Relies on an unofficial, reverse-engineered library that Microsoft can break at any moment
-- **YouTube Policy**: This type of automated, AI-generated content is considered "low-effort" and risks demonetization
+## 🚀 Quick Start
 
-### 2. **YouTube API Quota Limits**
-- Default quota: **10,000 units/day**
-- Upload cost: **1,600 units/video**
-- **Maximum: 6 uploads per day**
-- The current 4x/day schedule is safe, but don't increase frequency
+### 1. Prerequisites
 
-### 3. **Monetization Risk**
-YouTube actively enforces policies against mass-produced, repetitive content. Channels using this type of automation have a high risk of:
-- Never achieving monetization eligibility
-- Being demonetized after review
-- Having videos removed for spam
+**Accounts needed:**
+- Reddit account (for API access)
+- Google account (for YouTube uploads)
+- GitHub account (for automation)
 
-**This is a learning/experimental project, not a reliable business model.**
+**Local setup (one-time):**
+- Python 3.10+
+- FFmpeg installed
 
----
+### 2. Setup Steps
 
-## 📋 Prerequisites
+1. **Fork/Clone this repository**
+   ```bash
+   git clone https://github.com/demirbase/youtube-shorts-bot
+   cd youtube-shorts-bot
+   ```
 
-### Accounts Required
-- **Reddit Account** - for accessing Reddit's API (free)
-- **Google Account** - for YouTube uploads
-- **GitHub Account** - for running automation (free tier is sufficient)
+2. **Set up Reddit API**
+   - Follow the guide: [`docs/REDDIT_API_SETUP.md`](docs/REDDIT_API_SETUP.md)
+   - Add 4 GitHub secrets: `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USERNAME`, `REDDIT_PASSWORD`
 
-### Local Machine (One-Time Setup)
-- **Python 3.10+**
-- **FFmpeg** installed and in PATH
+3. **Set up YouTube API**
+   - Create Google Cloud project
+   - Enable YouTube Data API v3
+   - Download credentials as `client_secrets.json`
+   - Run `python authenticate.py` locally to generate `token.json`
+   - Add 2 GitHub secrets with file contents: `CLIENT_SECRETS_CONTENT`, `YOUTUBE_TOKEN_CONTENT`
 
-### API Access
-- **Reddit API credentials** - see [REDDIT_API_SETUP.md](REDDIT_API_SETUP.md)
-- **YouTube API credentials** - see Phase 1 below
-- **GitHub repository** - must be public for free GitHub Actions
+4. **Enable GitHub Actions**
+   - Go to **Actions** tab in your repo
+   - Enable workflows
+   - The bot runs automatically every 6 hours
 
----
+### 3. Manual Testing
 
-## 🚀 Complete Setup Guide
-
-### Phase 1: Google Cloud Console Setup
-
-#### 1.1 Create a Google Cloud Project
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Click the project dropdown (top left) → **New Project**
-3. Name it (e.g., "YouTube-Bot-Project") → **Create**
-
-#### 1.2 Enable YouTube Data API v3
-1. In the search bar, type "YouTube Data API v3"
-2. Click on it → Click **Enable**
-
-#### 1.3 Configure OAuth Consent Screen
-1. Navigate to **APIs & Services** → **OAuth consent screen** (left sidebar)
-2. Select **External** → Click **Create**
-3. Fill in required fields:
-   - **App name**: e.g., "Reddit Bot"
-   - **User support email**: Your email
-   - **Developer contact**: Your email
-4. Click **Save and Continue**
-5. On "Scopes" page:
-   - Click **Add or Remove Scopes**
-   - Search for "YouTube Data API v3"
-   - Check the box for `.../auth/youtube.upload`
-   - Click **Update** → **Save and Continue**
-6. On "Test users" page:
-   - Click **Add Users**
-   - Enter the Gmail address that owns your YouTube channel
-   - Click **Add** → **Save and Continue**
-7. Click **Back to Dashboard**
-
-#### 1.4 Create OAuth 2.0 Credentials
-1. Navigate to **APIs & Services** → **Credentials**
-2. Click **+ Create Credentials** → **OAuth client ID**
-3. Choose **Application type**: **Desktop app**
-4. Name it (e.g., "Bot-Desktop-Client") → **Create**
-5. A popup appears → Click **Download JSON**
-6. **Rename** the downloaded file to `client_secrets.json`
-
-✅ **Save this file securely** - you'll need it in the next phase.
-
----
-
-### Phase 2: Local Authentication
-
-This generates your YouTube API refresh token.
-
-#### 2.1 Set Up Local Project
 ```bash
-# Clone or download this repository
-cd reddit-shorts-bot
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: .\venv\Scripts\activate
-
 # Install dependencies
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
+
+# Set environment variables
+export REDDIT_CLIENT_ID="your_client_id"
+export REDDIT_CLIENT_SECRET="your_secret"
+export REDDIT_USERNAME="your_username"
+export REDDIT_PASSWORD="your_password"
+export CLIENT_SECRETS_CONTENT="$(cat client_secrets.json)"
+export YOUTUBE_TOKEN_CONTENT="$(cat token.json)"
+
+# Run the bot
+python main.py
 ```
 
-#### 2.2 Add Your Files
-1. Place `client_secrets.json` (from Phase 1) in the project root
-2. Add a `background.png` image (1080x1920 pixels, 9:16 aspect ratio)
-   - See `BACKGROUND_README.md` for recommendations
+## 📁 Project Structure
 
-#### 2.3 Run Authentication Script
-```bash
-python authenticate.py
-```
-
-**What happens:**
-1. Your browser opens automatically
-2. Log in with the Google Account you added as a "Test user"
-3. You'll see "Google hasn't verified this app" → Click **Advanced** → **Go to [app name] (unsafe)**
-4. Grant permission to "Upload videos to your YouTube channel"
-5. Browser shows "Authentication successful"
-6. A `token.json` file is created in your project folder
-
-✅ **You now have both secrets needed for GitHub Actions**
-
----
-
-### Phase 3: GitHub Repository Setup
-
-#### 3.1 Create GitHub Repository
-1. Go to [GitHub](https://github.com) and create a **new public repository**
-   - Name: e.g., "youtube-shorts-bot"
-   - **Must be public** for free GitHub Actions
-
-#### 3.2 Push Code to GitHub
-```bash
-# Initialize git (if not already done)
-git init
-git add .
-git commit -m "Initial bot setup"
-git branch -M main
-
-# Add your GitHub repository as remote
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-git push -u origin main
-```
-
-#### 3.3 Add GitHub Secrets
-1. In your GitHub repository, go to **Settings** → **Secrets and variables** → **Actions**
-2. Click **New repository secret**
-
-**Secret 1: CLIENT_SECRETS**
-- Name: `CLIENT_SECRETS`
-- Value: Open `client_secrets.json` in a text editor, copy the **entire contents** (from `{` to `}`), paste into the secret field
-- Click **Add secret**
-
-**Secret 2: YOUTUBE_TOKEN**
-- Click **New repository secret** again
-- Name: `YOUTUBE_TOKEN`
-- Value: Open `token.json`, copy the **entire contents**, paste into the secret field
-- Click **Add secret**
-
-🔒 **Security Note**: Never commit these files to git. The `.gitignore` file already excludes them.
-
----
-
-### Phase 4: Activation
-
-#### 4.1 Verify Files Are Pushed
-Ensure these files are in your GitHub repository:
 ```
 reddit-shorts-bot/
-├── .github/
-│   └── workflows/
-│       └── bot.yml
-├── authenticate.py
-├── main.py
-├── reddit_scraper.py
-├── video_creator.py
-├── youtube_uploader.py
-├── requirements.txt
-├── .gitignore
-├── used_posts.txt
-├── background.png  ← YOU MUST ADD THIS
-└── README.md
+├── main.py                 # Main orchestration script
+├── reddit_scraper.py       # Fetches posts from Reddit
+├── video_creator.py        # Generates audio and video
+├── youtube_uploader.py     # Handles YouTube uploads
+├── authenticate.py         # One-time YouTube OAuth (run locally)
+├── requirements.txt        # Python dependencies
+├── used_posts.txt          # Tracks processed posts
+├── background.png          # Video background (1080x1920)
+├── .github/workflows/
+│   └── bot.yml            # GitHub Actions automation
+└── docs/                   # Documentation
+    ├── REDDIT_API_SETUP.md
+    ├── TROUBLESHOOTING.md
+    └── [other guides]
 ```
-
-#### 4.2 Manual Test Run
-1. Go to your repository on GitHub
-2. Click the **Actions** tab
-3. Click **Reddit-to-YouTube-Shorts-Bot** workflow (left sidebar)
-4. Click **Run workflow** (right side) → **Run workflow**
-5. Click on the running job to watch real-time logs
-
-#### 4.3 Verify Success
-✅ **On GitHub**: Check your repository's commit history for a new "AUTOBOT: Update used_posts.txt" commit
-
-✅ **On YouTube**: Go to [YouTube Studio](https://studio.youtube.com) → **Content** tab → You should see a new private video
-
----
-
-## 🤖 How It Works
-
-### Automation Schedule
-The workflow runs **automatically every 6 hours** (00:00, 06:00, 12:00, 18:00 UTC).
-
-You can also trigger it manually from the Actions tab.
-
-### What Happens Each Run
-1. ✅ GitHub Actions runner starts
-2. ✅ Checks out your repository code
-3. ✅ Installs Python dependencies and FFmpeg
-4. ✅ Loads your secrets from GitHub Actions secrets
-5. ✅ Scrapes r/AskReddit for a new top post
-6. ✅ Generates audio narration with Edge TTS
-7. ✅ Creates subtitles and assembles video with FFmpeg
-8. ✅ Uploads video to YouTube as "Private"
-9. ✅ Updates `used_posts.txt` to prevent duplicates
-10. ✅ Commits the updated state file back to GitHub
-
----
 
 ## ⚙️ Configuration
 
-### Change Subreddit
-Edit `main.py`:
+Edit `main.py` to customize:
+
 ```python
-SUBREDDIT = "AskReddit"  # Change to any subreddit
+SUBREDDIT = "AskReddit"                    # Source subreddit
+VIDEO_TITLE_PREFIX = "Reddit Asks: "       # Video title format
+VIDEO_TAGS = ["reddit", "askreddit", ...]  # YouTube tags
 ```
 
-### Change Upload Schedule
-Edit `.github/workflows/bot.yml`:
+Edit `.github/workflows/bot.yml` to change schedule:
+
 ```yaml
 schedule:
-  - cron: '0 */6 * * *'  # Every 6 hours
-  # Examples:
-  # '0 */12 * * *'  → Every 12 hours
-  # '0 0 * * *'     → Once per day at midnight UTC
+  - cron: '0 */6 * * *'  # Every 6 hours (default)
+  # - cron: '0 0,12 * * *'  # Twice per day
+  # - cron: '0 0 * * *'     # Once per day
 ```
 
-⚠️ **Warning**: Don't increase frequency beyond 6x/day due to YouTube API quota limits (max 6 uploads/day).
+## 🔧 How It Works
 
-### Change Video Privacy
-Edit `youtube_uploader.py`:
-```python
-"privacyStatus": "private"  # Options: "public", "private", "unlisted"
-```
+### Workflow
+1. **GitHub Actions** triggers on schedule (every 6 hours)
+2. **reddit_scraper.py** authenticates with Reddit API and fetches top post
+3. **video_creator.py** generates audio with Google TTS and assembles video with FFmpeg
+4. **youtube_uploader.py** uploads video to YouTube as private
+5. Workflow commits updated `used_posts.txt` to prevent duplicates
 
-### Change TTS Voice
-Edit `video_creator.py`:
-```python
-VOICE = "en-US-JennyNeural"  # See Microsoft Edge TTS voices list
-```
+### Key Features
+- **Duplicate prevention**: Tracks used post IDs in `used_posts.txt`
+- **Error handling**: Graceful failures with detailed logging
+- **Resumable uploads**: YouTube API supports large file uploads
+- **Secure secrets**: All credentials stored as GitHub Actions secrets
 
-Available voices: https://github.com/rany2/edge-tts#voice-list
+## ⚠️ Important Warnings
 
----
+### 1. YouTube API Quota
+- **10,000 units/day** limit (default)
+- **1,600 units per upload**
+- **Maximum 6 videos/day**
+- Current schedule (4x/day) is safe
 
-## 📊 YouTube API Quota Budget
+### 2. Content Policy
+YouTube considers automated, repetitive content as "low-effort":
+- May not be eligible for monetization
+- Risk of demonetization after review
+- Potential spam violations
 
-| Action | Quota Cost | Daily Max (if only this action) |
-|--------|-----------|--------------------------------|
-| Upload Video | 1,600 | 6 uploads |
-| Search | 100 | 100 searches |
-| Add to Playlist | 50 | 200 additions |
-| List Playlists | 1 | 10,000 lists |
+**This is a learning project, not a monetization strategy.**
 
-**Your daily budget: 10,000 units**
+### 3. Dependencies
+- **Reddit API**: Official PRAW library (stable)
+- **Google TTS**: Official gTTS library (stable)
+- **YouTube API**: Official Google library (stable)
+- **FFmpeg**: Open-source video tool (stable)
 
-Current schedule (4 uploads/day) uses: **6,400 units/day** (64% of quota)
+All dependencies are production-ready and reliable.
 
----
+## 📚 Documentation
+
+- **[Reddit API Setup Guide](docs/REDDIT_API_SETUP.md)** - Complete Reddit app configuration
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Fix History](docs/)** - Documentation of past issues and fixes
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### Reddit authentication fails
+- Verify credentials in GitHub secrets
+- Check Reddit app is type "script"
+- Ensure username doesn't include `/u/`
 
-**⚠️ IMPORTANT: Reddit API Setup Required**
-- The bot now uses Reddit's **official API (PRAW)** for reliable access
-- This requires Reddit app credentials (free, takes 5 minutes to set up)
-- **📖 See [REDDIT_API_SETUP.md](REDDIT_API_SETUP.md) for complete setup instructions**
-- Without these credentials, the bot cannot fetch Reddit posts
+### YouTube upload fails
+- Re-run `authenticate.py` locally
+- Update `YOUTUBE_TOKEN_CONTENT` secret
+- Check API quota hasn't been exceeded
 
-**"No new post found or scraping failed"**
-- You haven't set up Reddit API credentials yet
-- All available posts may have been used already
-- See [REDDIT_API_SETUP.md](REDDIT_API_SETUP.md) to configure Reddit access
+### Video creation fails
+- Ensure `background.png` exists (1080x1920)
+- Verify FFmpeg is installed in workflow
+- Check audio generation logs
 
-**"YouTube authentication failed"**
-- Verify both secrets are correctly added in GitHub Settings → Secrets
-- Ensure you copied the **entire JSON content** including braces `{ }`
-- Re-run `authenticate.py` locally to generate a fresh `token.json`
-
-**"Video creation failed"**
-- Ensure `background.png` exists in your repository
-- Check GitHub Actions logs for FFmpeg errors
-- Verify FFmpeg is set up correctly in the workflow
-
-**"Quota exceeded" error**
-- You've hit YouTube's 10,000 unit daily limit
-- Wait 24 hours for quota reset (resets at midnight Pacific Time)
-- Consider reducing upload frequency
-
-**Edge TTS stops working**
-- Microsoft may have changed their internal API
-- Check [edge-tts GitHub issues](https://github.com/rany2/edge-tts/issues)
-- This is expected - see "Fragile Architecture" warning
-
-📖 **For detailed solutions and alternatives, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)**
-
----
-
-## 🎓 Learning Resources
-
-### Understanding the Code
-- `authenticate.py`: OAuth 2.0 flow for local token generation
-- `reddit_scraper.py`: HTTP requests to Reddit's JSON endpoints
-- `video_creator.py`: Async TTS generation and FFmpeg video assembly
-- `youtube_uploader.py`: Google API client for authenticated uploads
-- `main.py`: Orchestration layer tying all modules together
-
-### Key Technologies
-- **GitHub Actions**: CI/CD automation platform
-- **Edge TTS**: Unofficial Microsoft TTS wrapper
-- **FFmpeg**: Media processing framework
-- **YouTube Data API v3**: Official Google API
-
----
-
-## 📈 Scaling to Production (Paid)
-
-To make this system robust, replace the free components:
-
-### 1. Replace Edge TTS
-- ✅ **Azure Cognitive Services** (official Microsoft TTS): $4-16 per million characters
-- ✅ **ElevenLabs**: $5-330/month for high-quality voices
-- ✅ **Google Cloud Text-to-Speech**: $4-16 per million characters
-
-### 2. Replace Reddit Scraping
-- ✅ Register for **official Reddit API** (free, but requires authentication)
-- ✅ Rate limit: 600 requests per 10 minutes (vs. ~20 for public endpoint)
-
-### 3. Address YouTube Policies
-- ✅ Add **unique value**: Commentary, editing, visualizations
-- ✅ Replace static image with **dynamic B-roll footage**
-- ✅ Add **human voiceover** or personality
-- ✅ Focus on **original insight** rather than content aggregation
-
----
-
-## 📝 License
-
-This project is provided as-is for educational purposes. 
-
-**Important Legal Notes**:
-- Reddit's Terms of Service prohibit automated scraping without permission
-- YouTube's Terms of Service prohibit spam and mass-produced content
-- Microsoft Edge TTS is reverse-engineered and not officially supported
-- Use at your own risk
-
----
+See [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) for detailed solutions.
 
 ## 🤝 Contributing
 
-This is an educational/experimental project. Feel free to fork and modify for your own learning.
+This is a personal learning project, but suggestions are welcome! Open an issue to discuss improvements.
 
-**Ideas for improvements**:
-- Add multiple subreddit support
-- Implement video thumbnail generation
-- Add webhook notifications (Discord, Slack)
-- Create a dashboard for monitoring uploads
-- Add error recovery and retry logic
+## 📜 License
 
----
+MIT License - feel free to fork and modify for your own use.
 
-## 📧 Support
+## ⭐ Acknowledgments
 
-For issues related to:
-- **Google API**: Check [Google's API documentation](https://developers.google.com/youtube/v3)
-- **Edge TTS**: See [edge-tts GitHub repo](https://github.com/rany2/edge-tts)
-- **GitHub Actions**: Review [GitHub Actions documentation](https://docs.github.com/en/actions)
+- **PRAW** - Python Reddit API Wrapper
+- **gTTS** - Google Text-to-Speech
+- **FFmpeg** - Video processing
+- **Google APIs** - YouTube Data API
 
 ---
 
-## 🎬 What's Generated
-
-Each video contains:
-- 📢 AI voice reading the post title + top 3 comments
-- 📝 Auto-generated subtitles burned into the video
-- 🖼️ Static background image (1080x1920 vertical format)
-- 🎵 192kbps AAC audio
-- 📱 Optimized for YouTube Shorts (9:16 aspect ratio)
-- 🔒 Uploaded as "Private" by default
-
----
-
-**Ready to get started?** Follow Phase 1 above! 🚀
-
----
-
-**Disclaimer**: This system is designed for educational purposes to demonstrate automation concepts. The author is not responsible for any policy violations, API changes, or account restrictions that may result from using this code. Always review and comply with the Terms of Service of all platforms you interact with.
+**Status**: ✅ Working and tested  
+**Last Updated**: November 10, 2025  
+**Maintainer**: [@demirbase](https://github.com/demirbase)

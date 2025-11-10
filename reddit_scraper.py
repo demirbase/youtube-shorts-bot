@@ -26,18 +26,6 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
         username = os.environ.get('REDDIT_USERNAME', '').strip()
         password = os.environ.get('REDDIT_PASSWORD', '').strip()
         
-        # Debug: Check if credentials are loaded (without revealing values)
-        print(f"🔑 Credential check:")
-        print(f"   REDDIT_CLIENT_ID: {'✅ Set (' + str(len(client_id)) + ' chars)' if client_id else '❌ Missing'}")
-        print(f"   REDDIT_CLIENT_SECRET: {'✅ Set (' + str(len(client_secret)) + ' chars)' if client_secret else '❌ Missing'}")
-        print(f"   REDDIT_USERNAME: {'✅ Set (length: ' + str(len(username)) + ' chars)' if username else '❌ Missing'}")
-        if username:
-            # Show hex dump of first 20 chars to see hidden characters
-            hex_dump = ' '.join(f'{ord(c):02x}' for c in username[:20])
-            print(f"   REDDIT_USERNAME (hex): {hex_dump}")
-            print(f"   REDDIT_USERNAME should be 'seftalibursa' (13 chars)")
-        print(f"   REDDIT_PASSWORD: {'✅ Set (' + str(len(password)) + ' chars)' if password else '❌ Missing'}")
-        
         if not all([client_id, client_secret, username, password]):
             print("\n❌ One or more Reddit credentials are missing!")
             print("📖 See REDDIT_API_SETUP.md for setup instructions")
@@ -53,19 +41,11 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
         )
         
         # Test authentication
-        print("🔐 Testing Reddit authentication...")
         try:
-            reddit.user.me()
-            print("✅ Reddit authentication successful!")
+            user = reddit.user.me()
+            print(f"✅ Authenticated as u/{user}")
         except Exception as auth_err:
-            print(f"❌ Reddit authentication failed!")
-            print(f"   Error: {str(auth_err)}")
-            print("\n🔍 Common causes:")
-            print("   1. Wrong Reddit password")
-            print("   2. Username includes '/u/' (it shouldn't)")
-            print("   3. Client ID or Secret is incorrect")
-            print("   4. Reddit app type is not 'script'")
-            print("\n💡 Try logging in to https://reddit.com with these credentials to verify")
+            print(f"❌ Reddit authentication failed: {auth_err}")
             return None
         
         # Load the set of used post IDs
@@ -74,8 +54,7 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
             
         with open(USED_POSTS_FILE, 'r') as f:
             used_post_ids = set(line.strip() for line in f if line.strip() and not line.startswith('#'))
-        
-        print(f"📝 Already used {len(used_post_ids)} posts")
+
         
         # Fetch top posts from the subreddit
         subreddit_obj = reddit.subreddit(subreddit)
