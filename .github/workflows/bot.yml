@@ -55,18 +55,26 @@ jobs:
           REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
           REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
         run: |
-          cat >> $GITHUB_ENV << 'ENVEOF'
-          CLIENT_SECRETS_CONTENT<<EOF
-          $CLIENT_SECRETS
-          EOF
-          YOUTUBE_TOKEN_CONTENT<<EOF
-          $YOUTUBE_TOKEN
-          EOF
-          REDDIT_CLIENT_ID=$REDDIT_CLIENT_ID
-          REDDIT_CLIENT_SECRET=$REDDIT_CLIENT_SECRET
-          REDDIT_USERNAME=$REDDIT_USERNAME
-          REDDIT_PASSWORD=$REDDIT_PASSWORD
-          ENVEOF
+          {
+            echo "CLIENT_SECRETS_CONTENT<<EOF"
+            echo "$CLIENT_SECRETS"
+            echo "EOF"
+            echo "YOUTUBE_TOKEN_CONTENT<<EOF"
+            echo "$YOUTUBE_TOKEN"
+            echo "EOF"
+            echo "REDDIT_CLIENT_ID<<EOF"
+            echo "$REDDIT_CLIENT_ID"
+            echo "EOF"
+            echo "REDDIT_CLIENT_SECRET<<EOF"
+            echo "$REDDIT_CLIENT_SECRET"
+            echo "EOF"
+            echo "REDDIT_USERNAME<<EOF"
+            echo "$REDDIT_USERNAME"
+            echo "EOF"
+            echo "REDDIT_PASSWORD<<EOF"
+            echo "$REDDIT_PASSWORD"
+            echo "EOF"
+          } >> $GITHUB_ENV
 
       - name: 6. Run the Python Bot
         # This executes the main orchestration script.
