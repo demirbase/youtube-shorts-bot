@@ -32,7 +32,10 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
         print(f"   REDDIT_CLIENT_SECRET: {'✅ Set (' + str(len(client_secret)) + ' chars)' if client_secret else '❌ Missing'}")
         print(f"   REDDIT_USERNAME: {'✅ Set (length: ' + str(len(username)) + ' chars)' if username else '❌ Missing'}")
         if username:
-            print(f"   REDDIT_USERNAME (repr): {repr(username[:50])}")  # Show first 50 chars in repr format
+            # Show hex dump of first 20 chars to see hidden characters
+            hex_dump = ' '.join(f'{ord(c):02x}' for c in username[:20])
+            print(f"   REDDIT_USERNAME (hex): {hex_dump}")
+            print(f"   REDDIT_USERNAME should be 'seftalibursa' (13 chars)")
         print(f"   REDDIT_PASSWORD: {'✅ Set (' + str(len(password)) + ' chars)' if password else '❌ Missing'}")
         
         if not all([client_id, client_secret, username, password]):
