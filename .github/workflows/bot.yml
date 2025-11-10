@@ -46,32 +46,28 @@ jobs:
       - name: 5. Load Secrets into Environment
         # This step securely loads GitHub secrets and makes them
         # available as environment variables for the main.py script.
-        # Using heredoc for JSON secrets, printf for simple strings to avoid newlines
+        # All secrets are passed directly as environment variables to the next step
+        # No need to write to $GITHUB_ENV - simpler and more reliable
         env:
-          CLIENT_SECRETS: ${{ secrets.CLIENT_SECRETS }}
-          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN }}
+          CLIENT_SECRETS_CONTENT: ${{ secrets.CLIENT_SECRETS }}
+          YOUTUBE_TOKEN_CONTENT: ${{ secrets.YOUTUBE_TOKEN }}
           REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
           REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
         run: |
-          {
-            echo "CLIENT_SECRETS_CONTENT<<EOF"
-            echo "$CLIENT_SECRETS"
-            echo "EOF"
-            echo "YOUTUBE_TOKEN_CONTENT<<EOF"
-            echo "$YOUTUBE_TOKEN"
-            echo "EOF"
-          } >> $GITHUB_ENV
-          # Use printf for simple strings to avoid trailing newlines
-          printf "REDDIT_CLIENT_ID=%s\n" "$REDDIT_CLIENT_ID" >> $GITHUB_ENV
-          printf "REDDIT_CLIENT_SECRET=%s\n" "$REDDIT_CLIENT_SECRET" >> $GITHUB_ENV
-          printf "REDDIT_USERNAME=%s\n" "$REDDIT_USERNAME" >> $GITHUB_ENV
-          printf "REDDIT_PASSWORD=%s\n" "$REDDIT_PASSWORD" >> $GITHUB_ENV
+          echo "✅ Secrets loaded into environment variables"
 
       - name: 6. Run the Python Bot
         # This executes the main orchestration script.
-        # main.py will read the env vars set in the previous step.
+        # Secrets are passed directly as environment variables
+        env:
+          CLIENT_SECRETS_CONTENT: ${{ secrets.CLIENT_SECRETS }}
+          YOUTUBE_TOKEN_CONTENT: ${{ secrets.YOUTUBE_TOKEN }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
         run: |
           python main.py
 
