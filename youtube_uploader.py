@@ -23,10 +23,21 @@ def get_authenticated_service() -> googleapiclient.discovery.Resource | None:
     print("Authenticating with YouTube API...")
     credentials = None
     try:
-        # The 'from_authorized_user_file' method uses the refresh token
-        # from token.json to get a new access token.
-        credentials = google.oauth2.credentials.Credentials.from_authorized_user_file(
-            TOKEN_FILE, SCOPES)
+        import json
+        
+        # Load credentials from token.json
+        with open(TOKEN_FILE, 'r') as f:
+            token_data = json.load(f)
+        
+        # Create credentials object from the token data
+        credentials = google.oauth2.credentials.Credentials(
+            token=token_data.get('token'),
+            refresh_token=token_data.get('refresh_token'),
+            token_uri=token_data.get('token_uri'),
+            client_id=token_data.get('client_id'),
+            client_secret=token_data.get('client_secret'),
+            scopes=token_data.get('scopes')
+        )
         
         if not credentials or not credentials.valid:
             if credentials and credentials.expired and credentials.refresh_token:
