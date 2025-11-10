@@ -5,11 +5,12 @@ import os
 import sys
 import reddit_scraper
 import youtube_uploader
-from audio_utils import speed_up_audio, get_audio_duration
+from audio_utils import speed_up_audio
 from background_downloader import download_background_video
-from comment_image_generator import create_comment_image
+from comment_image_pil import create_comment_image_pil
 from video_assembler_v2 import assemble_short_video
 from gtts import gTTS
+from PIL import Image
 
 # --- V2 Configuration ---
 SUBREDDIT = "AskReddit"
@@ -130,12 +131,18 @@ def main():
 
         # --- 3. Download Background Video ---
         if USE_DYNAMIC_BACKGROUND:
-            background_file = download_background_video(query=BACKGROUND_QUERY)
-            if not background_file:
-                print("⚠️  Failed to download background, using fallback...")
+            print("📥 Attempting to download background video...")
+            background_file = download_background_video(query=BACKGROUND_QUERY, output_file="background_video.mp4")
+            if not background_file or not os.path.exists(background_file):
+                print("⚠️  Failed to download background video, using static image fallback...")
                 background_file = "background.png"  # Fallback to static image
         else:
+            print("📷 Using static background image (set USE_DYNAMIC_BACKGROUND=True for video)")
             background_file = "background.png"
+        
+        if not os.path.exists(background_file):
+            print(f"❌ Error: Background file not found: {background_file}")
+            sys.exit(1)
 
         # --- 4. Generate Audio Segments (with speed enhancement) ---
         audio_files = generate_audio_for_segments(post_data)
@@ -143,12 +150,12 @@ def main():
             print("❌ Audio generation failed. Exiting.")
             sys.exit(1)
 
-        # --- 5. Generate Comment Images ---
-        print("🎨 Generating comment overlay images...")
+        # --- 5. Generate Comment Images (Using PIL - no external deps) ---
+        print("🎨 Generating comment overlay images with PIL...")
         image_files = []
         
         # Title image
-        title_img = create_comment_image(
+        title_img = create_comment_image_pil(
             text=post_data['title'],
             username=f"r/{post_data['subreddit']}",
             output_png="title.png",
@@ -160,7 +167,7 @@ def main():
         # Comment images
         if 'comments' in post_data:
             for i, comment in enumerate(post_data['comments'][:3], 1):
-                comment_img = create_comment_image(
+                comment_img = create_comment_image_pil(
                     text=comment['body'],
                     username=f"u/{comment['author']}",
                     output_png=f"comment_{i}.png",

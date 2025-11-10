@@ -13,9 +13,7 @@ VIDEO_TITLE_PREFIX = "Reddit Asks: "
 VIDEO_TAGS = ["reddit", "askreddit", "redditstories", "shorts"]
 VIDEO_DESCRIPTION = (
     "A top post from r/AskReddit.\n\n"
-    "#reddit #askreddit #redditstories #shorts #youtubeshorts\n\n"
-    "This video was generated automatically."
-)
+    "#reddit #askreddit #redditstories #shorts #youtubeshorts\n\n")
 # ---------------------
 
 def main():

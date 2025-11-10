@@ -6,4 +6,4 @@ google-auth-httplib2
 praw
 moviepy
 yt-dlp
-imgkit
+Pillow
