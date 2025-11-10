@@ -46,26 +46,27 @@ jobs:
       - name: 5. Load Secrets into Environment
         # This step securely loads GitHub secrets and makes them
         # available as environment variables for the main.py script.
-        # Using heredoc syntax for all secrets to safely handle special characters
+        # Using proper heredoc syntax with environment variables
+        env:
+          CLIENT_SECRETS: ${{ secrets.CLIENT_SECRETS }}
+          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
         run: |
-          cat >> $GITHUB_ENV << 'EOF'
-          CLIENT_SECRETS_CONTENT=${{ secrets.CLIENT_SECRETS }}
+          cat >> $GITHUB_ENV << 'ENVEOF'
+          CLIENT_SECRETS_CONTENT<<EOF
+          $CLIENT_SECRETS
           EOF
-          cat >> $GITHUB_ENV << 'EOF'
-          YOUTUBE_TOKEN_CONTENT=${{ secrets.YOUTUBE_TOKEN }}
+          YOUTUBE_TOKEN_CONTENT<<EOF
+          $YOUTUBE_TOKEN
           EOF
-          cat >> $GITHUB_ENV << 'EOF'
-          REDDIT_CLIENT_ID=${{ secrets.REDDIT_CLIENT_ID }}
-          EOF
-          cat >> $GITHUB_ENV << 'EOF'
-          REDDIT_CLIENT_SECRET=${{ secrets.REDDIT_CLIENT_SECRET }}
-          EOF
-          cat >> $GITHUB_ENV << 'EOF'
-          REDDIT_USERNAME=${{ secrets.REDDIT_USERNAME }}
-          EOF
-          cat >> $GITHUB_ENV << 'EOF'
-          REDDIT_PASSWORD=${{ secrets.REDDIT_PASSWORD }}
-          EOF
+          REDDIT_CLIENT_ID=$REDDIT_CLIENT_ID
+          REDDIT_CLIENT_SECRET=$REDDIT_CLIENT_SECRET
+          REDDIT_USERNAME=$REDDIT_USERNAME
+          REDDIT_PASSWORD=$REDDIT_PASSWORD
+          ENVEOF
 
       - name: 6. Run the Python Bot
         # This executes the main orchestration script.
