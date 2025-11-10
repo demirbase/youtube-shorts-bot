@@ -20,17 +20,17 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
     print(f"🔍 Fetching top posts from r/{subreddit} using Reddit API...")
     
     try:
-        # Get credentials from environment
-        client_id = os.environ.get('REDDIT_CLIENT_ID')
-        client_secret = os.environ.get('REDDIT_CLIENT_SECRET')
-        username = os.environ.get('REDDIT_USERNAME')
-        password = os.environ.get('REDDIT_PASSWORD')
+        # Get credentials from environment and strip any whitespace
+        client_id = os.environ.get('REDDIT_CLIENT_ID', '').strip()
+        client_secret = os.environ.get('REDDIT_CLIENT_SECRET', '').strip()
+        username = os.environ.get('REDDIT_USERNAME', '').strip()
+        password = os.environ.get('REDDIT_PASSWORD', '').strip()
         
         # Debug: Check if credentials are loaded (without revealing values)
         print(f"🔑 Credential check:")
         print(f"   REDDIT_CLIENT_ID: {'✅ Set (' + str(len(client_id)) + ' chars)' if client_id else '❌ Missing'}")
         print(f"   REDDIT_CLIENT_SECRET: {'✅ Set (' + str(len(client_secret)) + ' chars)' if client_secret else '❌ Missing'}")
-        print(f"   REDDIT_USERNAME: {'✅ Set (' + username + ')' if username else '❌ Missing'}")
+        print(f"   REDDIT_USERNAME: {'✅ Set (length: ' + str(len(username)) + ' chars)' if username else '❌ Missing'}")
         print(f"   REDDIT_PASSWORD: {'✅ Set (' + str(len(password)) + ' chars)' if password else '❌ Missing'}")
         
         if not all([client_id, client_secret, username, password]):
