@@ -38,14 +38,19 @@ YouTube actively enforces policies against mass-produced, repetitive content. Ch
 
 ## 📋 Prerequisites
 
+### Accounts Required
+- **Reddit Account** - for accessing Reddit's API (free)
+- **Google Account** - for YouTube uploads
+- **GitHub Account** - for running automation (free tier is sufficient)
+
 ### Local Machine (One-Time Setup)
 - **Python 3.10+**
 - **FFmpeg** installed and in PATH
-- A **Google Account** with access to a YouTube channel
 
-### GitHub Account
-- A **GitHub account** (free tier is sufficient)
-- Ability to create public repositories (required for free GitHub Actions)
+### API Access
+- **Reddit API credentials** - see [REDDIT_API_SETUP.md](REDDIT_API_SETUP.md)
+- **YouTube API credentials** - see Phase 1 below
+- **GitHub repository** - must be public for free GitHub Actions
 
 ---
 
@@ -282,15 +287,16 @@ Current schedule (4 uploads/day) uses: **6,400 units/day** (64% of quota)
 
 ### Common Issues
 
-**Reddit 403 Blocking (Most Common)**
-- GitHub Actions runners are often blocked by Reddit
-- The scraper now includes fallback mechanisms and better headers
-- See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed solutions including using Reddit's official API
+**⚠️ IMPORTANT: Reddit API Setup Required**
+- The bot now uses Reddit's **official API (PRAW)** for reliable access
+- This requires Reddit app credentials (free, takes 5 minutes to set up)
+- **📖 See [REDDIT_API_SETUP.md](REDDIT_API_SETUP.md) for complete setup instructions**
+- Without these credentials, the bot cannot fetch Reddit posts
 
 **"No new post found or scraping failed"**
-- Reddit may be blocking the GitHub Actions IP address
+- You haven't set up Reddit API credentials yet
 - All available posts may have been used already
-- See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for alternative approaches
+- See [REDDIT_API_SETUP.md](REDDIT_API_SETUP.md) to configure Reddit access
 
 **"YouTube authentication failed"**
 - Verify both secrets are correctly added in GitHub Settings → Secrets

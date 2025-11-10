@@ -1,3 +1,4 @@
 # This file tracks which Reddit posts have been used
 # Do not delete this file - it prevents duplicate videos
 # The bot will automatically add post IDs here
+1osp7uo
