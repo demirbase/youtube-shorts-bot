@@ -46,28 +46,26 @@ jobs:
       - name: 5. Load Secrets into Environment
         # This step securely loads GitHub secrets and makes them
         # available as environment variables for the main.py script.
-        # Using heredoc syntax ONLY for JSON secrets (CLIENT_SECRETS, YOUTUBE_TOKEN)
-        # Direct assignment for simple string values (Reddit credentials)
-        env:
-          CLIENT_SECRETS: ${{ secrets.CLIENT_SECRETS }}
-          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN }}
-          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
-          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
-          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
-          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+        # Using heredoc syntax for all secrets to safely handle special characters
         run: |
-          {
-            echo "CLIENT_SECRETS_CONTENT<<EOF"
-            echo "$CLIENT_SECRETS"
-            echo "EOF"
-            echo "YOUTUBE_TOKEN_CONTENT<<EOF"
-            echo "$YOUTUBE_TOKEN"
-            echo "EOF"
-          } >> $GITHUB_ENV
-          echo "REDDIT_CLIENT_ID=$REDDIT_CLIENT_ID" >> $GITHUB_ENV
-          echo "REDDIT_CLIENT_SECRET=$REDDIT_CLIENT_SECRET" >> $GITHUB_ENV
-          echo "REDDIT_USERNAME=$REDDIT_USERNAME" >> $GITHUB_ENV
-          echo "REDDIT_PASSWORD=$REDDIT_PASSWORD" >> $GITHUB_ENV
+          cat >> $GITHUB_ENV << 'EOF'
+          CLIENT_SECRETS_CONTENT=${{ secrets.CLIENT_SECRETS }}
+          EOF
+          cat >> $GITHUB_ENV << 'EOF'
+          YOUTUBE_TOKEN_CONTENT=${{ secrets.YOUTUBE_TOKEN }}
+          EOF
+          cat >> $GITHUB_ENV << 'EOF'
+          REDDIT_CLIENT_ID=${{ secrets.REDDIT_CLIENT_ID }}
+          EOF
+          cat >> $GITHUB_ENV << 'EOF'
+          REDDIT_CLIENT_SECRET=${{ secrets.REDDIT_CLIENT_SECRET }}
+          EOF
+          cat >> $GITHUB_ENV << 'EOF'
+          REDDIT_USERNAME=${{ secrets.REDDIT_USERNAME }}
+          EOF
+          cat >> $GITHUB_ENV << 'EOF'
+          REDDIT_PASSWORD=${{ secrets.REDDIT_PASSWORD }}
+          EOF
 
       - name: 6. Run the Python Bot
         # This executes the main orchestration script.
