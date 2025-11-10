@@ -3,6 +3,8 @@
 
 import requests
 import os
+import time
+import random
 
 USED_POSTS_FILE = "used_posts.txt"
 
@@ -18,23 +20,64 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
     """
     print(f"Scraping r/{subreddit} for new top posts...")
     
-    # Define a user-agent to avoid potential 429 errors from default 'requests' agent
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
+    # Use a more realistic user-agent and additional headers to avoid blocking
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Cache-Control': 'max-age=0'
+    }
     
     # Construct the .json URL
     url = f"https://www.reddit.com/r/{subreddit}/top.json?limit=20&t=day"
 
     try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise an exception for bad status codes
+        # Add a small random delay to appear more human-like
+        time.sleep(random.uniform(1, 3))
+        
+        print(f"Fetching URL: {url}")
+        response = requests.get(url, headers=headers, timeout=15)
+        
+        print(f"Response status code: {response.status_code}")
+        
+        if response.status_code == 403:
+            print("⚠️ Reddit blocked the request (403 Forbidden)")
+            print("This is expected when using GitHub Actions runners.")
+            print("Trying alternative method: old.reddit.com...")
+            
+            # Try old.reddit.com as fallback
+            alt_url = f"https://old.reddit.com/r/{subreddit}/top.json?limit=20&t=day"
+            time.sleep(random.uniform(2, 4))
+            response = requests.get(alt_url, headers=headers, timeout=15)
+            print(f"Alternative attempt status code: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to fetch from Reddit. Status: {response.status_code}")
+            print(f"Response preview: {response.text[:500]}")
+            return None
+            
+        response.raise_for_status()
         data = response.json()
+        
+        # Debug: Print how many posts were fetched
+        posts_count = len(data.get('data', {}).get('children', []))
+        print(f"✅ Successfully fetched {posts_count} posts from Reddit")
 
         # Load the set of used post IDs
         if not os.path.exists(USED_POSTS_FILE):
             open(USED_POSTS_FILE, 'w').close()
             
         with open(USED_POSTS_FILE, 'r') as f:
-            used_post_ids = set(line.strip() for line in f)
+            used_post_ids = set(line.strip() for line in f if line.strip() and not line.startswith('#'))
+        
+        print(f"📝 Already used {len(used_post_ids)} posts")
 
         # Find the first post that is not in our used_post_ids set
         for post in data['data']['children']:
@@ -42,16 +85,27 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
             post_id = post_data['id']
             is_video = post_data.get('is_video', False)
             is_over_18 = post_data.get('over_18', False)
+            
+            print(f"  Checking post {post_id}: video={is_video}, nsfw={is_over_18}, used={post_id in used_post_ids}")
 
             # Skip videos, NSFW posts, and posts we've already used
             if post_id not in used_post_ids and not is_video and not is_over_18:
-                print(f"Found new post: {post_id} - {post_data['title']}")
+                print(f"✅ Found new post: {post_id}")
+                print(f"   Title: {post_data['title'][:80]}...")
                 
                 # Get the top comments for the post body
                 post_url = post_data['url']
                 comments_url = f"{post_url.rstrip('/')}.json"
                 
-                comments_response = requests.get(comments_url, headers=headers)
+                print(f"   Fetching comments...")
+                time.sleep(random.uniform(1, 2))  # Rate limiting
+                
+                comments_response = requests.get(comments_url, headers=headers, timeout=15)
+                
+                if comments_response.status_code != 200:
+                    print(f"   ⚠️ Failed to fetch comments (status {comments_response.status_code}). Skipping post.")
+                    continue
+                    
                 comments_response.raise_for_status()
                 comments_data = comments_response.json()
                 
@@ -63,14 +117,19 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
                 comment_count = 0
                 for comment in comments:
                     if comment['kind'] == 't1' and not comment['data'].get('stickied', False):
-                        post_body += comment['data']['body'] + "\n\n"
-                        comment_count += 1
-                        if comment_count >= 3:  # Limit to top 3 comments
-                            break
+                        comment_text = comment['data']['body']
+                        # Skip very short comments
+                        if len(comment_text) > 20:
+                            post_body += comment_text + "\n\n"
+                            comment_count += 1
+                            if comment_count >= 3:  # Limit to top 3 comments
+                                break
                 
                 if not post_body:
-                    print(f"Post {post_id} has no text comments. Skipping.")
+                    print(f"   ⚠️ Post {post_id} has no substantial text comments. Skipping.")
                     continue
+
+                print(f"   ✅ Successfully scraped post with {comment_count} comments")
 
                 # Add this post ID to our used list
                 with open(USED_POSTS_FILE, 'a') as f:
@@ -83,9 +142,16 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
                     "url": post_url
                 }
         
-        print("No new, eligible top posts found.")
+        print("⚠️ No new, eligible top posts found.")
         return None
 
     except requests.exceptions.RequestException as e:
-        print(f"Error scraping Reddit: {e}")
+        print(f"❌ Error scraping Reddit: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
         return None
