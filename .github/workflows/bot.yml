@@ -46,7 +46,7 @@ jobs:
       - name: 5. Load Secrets into Environment
         # This step securely loads GitHub secrets and makes them
         # available as environment variables for the main.py script.
-        # Using proper heredoc syntax with environment variables
+        # Using heredoc for JSON secrets, printf for simple strings to avoid newlines
         env:
           CLIENT_SECRETS: ${{ secrets.CLIENT_SECRETS }}
           YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN }}
@@ -62,19 +62,12 @@ jobs:
             echo "YOUTUBE_TOKEN_CONTENT<<EOF"
             echo "$YOUTUBE_TOKEN"
             echo "EOF"
-            echo "REDDIT_CLIENT_ID<<EOF"
-            echo "$REDDIT_CLIENT_ID"
-            echo "EOF"
-            echo "REDDIT_CLIENT_SECRET<<EOF"
-            echo "$REDDIT_CLIENT_SECRET"
-            echo "EOF"
-            echo "REDDIT_USERNAME<<EOF"
-            echo "$REDDIT_USERNAME"
-            echo "EOF"
-            echo "REDDIT_PASSWORD<<EOF"
-            echo "$REDDIT_PASSWORD"
-            echo "EOF"
           } >> $GITHUB_ENV
+          # Use printf for simple strings to avoid trailing newlines
+          printf "REDDIT_CLIENT_ID=%s\n" "$REDDIT_CLIENT_ID" >> $GITHUB_ENV
+          printf "REDDIT_CLIENT_SECRET=%s\n" "$REDDIT_CLIENT_SECRET" >> $GITHUB_ENV
+          printf "REDDIT_USERNAME=%s\n" "$REDDIT_USERNAME" >> $GITHUB_ENV
+          printf "REDDIT_PASSWORD=%s\n" "$REDDIT_PASSWORD" >> $GITHUB_ENV
 
       - name: 6. Run the Python Bot
         # This executes the main orchestration script.
