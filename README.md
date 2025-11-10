@@ -280,30 +280,39 @@ Current schedule (4 uploads/day) uses: **6,400 units/day** (64% of quota)
 
 ## 🐛 Troubleshooting
 
-### "No new post found or scraping failed"
-- Reddit may be rate-limiting your IP
-- Try reducing the schedule frequency
-- Reddit's `.json` endpoint may have changed
+### Common Issues
 
-### "YouTube authentication failed"
+**Reddit 403 Blocking (Most Common)**
+- GitHub Actions runners are often blocked by Reddit
+- The scraper now includes fallback mechanisms and better headers
+- See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed solutions including using Reddit's official API
+
+**"No new post found or scraping failed"**
+- Reddit may be blocking the GitHub Actions IP address
+- All available posts may have been used already
+- See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for alternative approaches
+
+**"YouTube authentication failed"**
 - Verify both secrets are correctly added in GitHub Settings → Secrets
 - Ensure you copied the **entire JSON content** including braces `{ }`
 - Re-run `authenticate.py` locally to generate a fresh `token.json`
 
-### "Video creation failed"
+**"Video creation failed"**
 - Ensure `background.png` exists in your repository
 - Check GitHub Actions logs for FFmpeg errors
 - Verify FFmpeg is set up correctly in the workflow
 
-### "Quota exceeded" error
+**"Quota exceeded" error**
 - You've hit YouTube's 10,000 unit daily limit
 - Wait 24 hours for quota reset (resets at midnight Pacific Time)
 - Consider reducing upload frequency
 
-### Edge TTS stops working
+**Edge TTS stops working**
 - Microsoft may have changed their internal API
 - Check [edge-tts GitHub issues](https://github.com/rany2/edge-tts/issues)
 - This is expected - see "Fragile Architecture" warning
+
+📖 **For detailed solutions and alternatives, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)**
 
 ---
 
