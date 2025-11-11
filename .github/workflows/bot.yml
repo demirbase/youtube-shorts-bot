@@ -96,7 +96,17 @@ jobs:
         run: |
           python main.py
 
-      - name: 9. Commit and Push State File
+      - name: 9. Upload Pending Videos as Artifacts
+        # If quota exceeded, upload videos for manual download
+        if: always()  # Run even if previous steps failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: pending-videos-${{ github.run_number }}
+          path: pending_uploads/
+          retention-days: 30  # Keep artifacts for 30 days
+          if-no-files-found: ignore  # Don't fail if no videos
+
+      - name: 10. Commit and Push State File
         # This block saves the 'used_posts.txt' file back to the repo,
         # ensuring the bot does not reuse posts.
         run: |
