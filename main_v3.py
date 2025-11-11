@@ -239,6 +239,22 @@ def main():
     # -------------------------------------------------------------------------
     print("📋 Step 7/7: Uploading to YouTube...")
     
+    # Load YouTube credentials from environment variables
+    client_secrets_content = os.environ.get('CLIENT_SECRETS_CONTENT')
+    youtube_token_content = os.environ.get('YOUTUBE_TOKEN_CONTENT')
+    
+    if not client_secrets_content or not youtube_token_content:
+        print("❌ YouTube credentials not found in environment variables.")
+        print("   Make sure CLIENT_SECRETS_CONTENT and YOUTUBE_TOKEN_CONTENT are set.")
+        sys.exit(1)
+    
+    # Write credentials to temporary files
+    with open(youtube_uploader.CLIENT_SECRETS_FILE, 'w') as f:
+        f.write(client_secrets_content)
+    with open(youtube_uploader.TOKEN_FILE, 'w') as f:
+        f.write(youtube_token_content)
+    print("   YouTube credentials loaded")
+    
     # Authenticate with YouTube
     youtube_service = youtube_uploader.get_authenticated_service()
     if not youtube_service:
