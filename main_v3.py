@@ -153,6 +153,7 @@ def main():
     narration_text = build_narration_text(post_data)
     print(f"   Narration length: {len(narration_text)} characters")
     
+    # Try edge-tts first
     result = generate_audio_with_subtitles_sync(
         text=narration_text,
         audio_file="audio.mp3",
@@ -162,10 +163,33 @@ def main():
     )
     
     if not result:
-        print("❌ Failed to generate audio/subtitles. Exiting.")
-        sys.exit(1)
+        # Fallback to gTTS if edge-tts fails
+        print("⚠️  edge-tts failed, falling back to gTTS...")
+        try:
+            from gtts import gTTS
+            from audio_utils import speed_up_audio
+            
+            # Generate audio with gTTS
+            tts = gTTS(text=narration_text, lang='en', slow=False)
+            temp_audio = "audio_temp.mp3"
+            tts.save(temp_audio)
+            
+            # Speed it up to 1.3x (like V2)
+            audio_file = speed_up_audio(temp_audio, "audio.mp3", speed=1.3)
+            subtitle_file = None  # No subtitles with gTTS
+            
+            if not audio_file:
+                print("❌ Failed to generate audio with fallback method. Exiting.")
+                sys.exit(1)
+                
+            print(f"✅ Audio generated with gTTS (fallback)")
+            
+        except Exception as e:
+            print(f"❌ Fallback audio generation failed: {e}")
+            sys.exit(1)
+    else:
+        audio_file, subtitle_file = result
     
-    audio_file, subtitle_file = result
     print(f"✅ Audio ready: {audio_file}")
     print(f"✅ Subtitles ready: {subtitle_file}")
     print()
