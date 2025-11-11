@@ -7,7 +7,7 @@ import sys
 import reddit_scraper
 import youtube_uploader
 from pexels_downloader import download_pexels_video, get_random_query
-from reddit_screenshot import take_reddit_screenshot
+from reddit_image_creator import create_reddit_post_image
 from subtitle_generator import generate_audio_with_subtitles_sync, VOICE_PRESETS
 from ffmpeg_composer import compose_video_with_ffmpeg
 
@@ -111,7 +111,8 @@ def main():
     url = post_data['url']
     subreddit = post_data.get('subreddit', SUBREDDIT)
     
-    print(f"✅ Post selected:")
+    print()
+    print("✅ Post selected:")
     print(f"   Title: {title}")
     print(f"   URL: {url}")
     print(f"   Subreddit: r/{subreddit}")
@@ -139,22 +140,24 @@ def main():
     print()
     
     # -------------------------------------------------------------------------
-    # STEP 3: Take Playwright Screenshot of Reddit Post
+    # STEP 3: Create Reddit-Style Post Image (Avoids Blocking Issues)
     # -------------------------------------------------------------------------
-    print("📋 Step 3/7: Taking Reddit screenshot with Playwright...")
+    print("📋 Step 3/7: Creating Reddit-style post image...")
+    print("   Using custom image creator to avoid Reddit blocking")
     
-    screenshot_image = take_reddit_screenshot(
-        post_url=url,
+    # Create custom Reddit-style image (more reliable than screenshots)
+    screenshot_image = create_reddit_post_image(
+        post_data=post_data,
         output_file="post.png",
         width=1080,
         height=1920
     )
     
     if not screenshot_image:
-        print("❌ Failed to take Reddit screenshot. Exiting.")
+        print("❌ Failed to create post image. Exiting.")
         sys.exit(1)
     
-    print(f"✅ Screenshot ready: {screenshot_image}")
+    print(f"✅ Post image ready: {screenshot_image}")
     print()
     
     # -------------------------------------------------------------------------
@@ -194,7 +197,7 @@ def main():
                 print("❌ Failed to generate audio with fallback method. Exiting.")
                 sys.exit(1)
                 
-            print(f"✅ Audio generated with gTTS (fallback)")
+            print("✅ Audio generated with gTTS (fallback)")
             
         except Exception as e:
             print(f"❌ Fallback audio generation failed: {e}")
