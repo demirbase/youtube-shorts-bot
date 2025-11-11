@@ -89,7 +89,7 @@ def main():
     # STEP 1: Fetch Fresh Reddit Post
     # -------------------------------------------------------------------------
     print("📋 Step 1/7: Fetching Reddit post...")
-    post_data = reddit_scraper.get_random_reddit_post(SUBREDDIT)
+    post_data = reddit_scraper.get_top_reddit_post(SUBREDDIT)
     
     if not post_data:
         print("❌ No suitable Reddit post found. Exiting.")

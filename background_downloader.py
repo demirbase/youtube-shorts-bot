@@ -42,7 +42,7 @@ def download_background_video(
             print(f"✅ Background video downloaded: {output_file}")
             return output_file
         else:
-            print(f"❌ Failed to download video (file not created)")
+            print("❌ Failed to download video (file not created)")
             return None
             
     except Exception as e:

@@ -125,7 +125,7 @@ def get_top_reddit_post(subreddit: str) -> dict | None:
     
     except Exception as e:
         print(f"❌ Error accessing Reddit API: {e}")
-        print(f"   Make sure REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USERNAME, and REDDIT_PASSWORD are set")
+        print("   Make sure REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USERNAME, and REDDIT_PASSWORD are set")
         import traceback
         traceback.print_exc()
         return None

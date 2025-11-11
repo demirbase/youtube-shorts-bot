@@ -117,7 +117,7 @@ def create_comment_image(
             print(f"✅ Successfully created comment image: {output_png}")
             return output_png
         else:
-            print(f"❌ wkhtmltoimage failed. Is it installed? (sudo apt-get install wkhtmltopdf)")
+            print("❌ wkhtmltoimage failed. Is it installed? (sudo apt-get install wkhtmltopdf)")
             print(f"   Error: {result.stderr.decode()}")
             return None
             
