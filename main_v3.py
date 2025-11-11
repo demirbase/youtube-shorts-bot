@@ -239,23 +239,27 @@ def main():
     # -------------------------------------------------------------------------
     print("📋 Step 7/7: Uploading to YouTube...")
     
-    video_id = youtube_uploader.upload_video(
-        video_path=final_video,
+    # Authenticate with YouTube
+    youtube_service = youtube_uploader.get_authenticated_service()
+    if not youtube_service:
+        print("❌ YouTube authentication failed. Exiting.")
+        sys.exit(1)
+    
+    # Upload video
+    success = youtube_uploader.upload_video(
+        youtube_service=youtube_service,
+        file_path=final_video,
         title=youtube_title,
         description=youtube_description,
-        tags=VIDEO_TAGS,
-        category_id="24",  # Entertainment
-        privacy_status="public",
-        made_for_kids=False
+        tags=VIDEO_TAGS
     )
     
-    if video_id:
-        print(f"✅ Video uploaded successfully!")
-        print(f"   Video ID: {video_id}")
-        print(f"   URL: https://youtube.com/shorts/{video_id}")
+    if success:
+        print("✅ Video uploaded successfully!")
         
         # Mark post as used
-        reddit_scraper.mark_post_as_used(post_data['id'])
+        with open(reddit_scraper.USED_POSTS_FILE, 'a') as f:
+            f.write(f"{post_data['id']}\n")
         print(f"   Post marked as used: {post_data['id']}")
     else:
         print("❌ Upload failed.")
