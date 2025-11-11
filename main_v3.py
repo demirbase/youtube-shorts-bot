@@ -50,8 +50,10 @@ def build_narration_text(post_data: dict) -> str:
     # Start with title
     text_parts = [f"From r/{subreddit}: {title}"]
     
-    # Add top comments (limit to 3-5 for reasonable video length)
-    max_comments = 5
+    # Add top comments (increased from 5 to 15 for 30-60 second videos)
+    max_comments = 15
+    comments_added = 0
+    
     for i, comment in enumerate(comments[:max_comments], 1):
         author = comment.get('author', 'unknown')
         body = comment.get('body', '')
@@ -59,12 +61,22 @@ def build_narration_text(post_data: dict) -> str:
         # Clean up comment text
         body = body.replace('\n', ' ').strip()
         
-        # Skip very short or very long comments
-        if len(body) < 20 or len(body) > 500:
+        # Relaxed filters - include more comments for longer videos
+        # Skip only very short or extremely long comments
+        if len(body) < 10 or len(body) > 800:
             continue
         
         text_parts.append(f"Comment from {author}: {body}")
+        comments_added += 1
+        
+        # Stop if we've added enough comments (aim for 40-60 seconds)
+        # Average TTS speed: ~150 words per minute = 2.5 words/sec
+        # For 45 seconds, we need ~112 words
+        total_words = len(" ".join(text_parts).split())
+        if total_words > 300:  # ~120 seconds max
+            break
     
+    print(f"   Narration: {len(text_parts)} segments, ~{len(' '.join(text_parts).split())} words")
     return " ".join(text_parts)
 
 
@@ -205,7 +217,7 @@ def main():
         subtitle_file=subtitle_file,
         audio_file=audio_file,
         output_file="final_short.mp4",
-        screenshot_position="top"
+        screenshot_position="center"  # Centered for better visual balance
     )
     
     if not final_video:

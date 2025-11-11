@@ -9,7 +9,7 @@ def take_reddit_screenshot(
     output_file: str = "post.png",
     width: int = 1080,
     height: int = 1920,
-    wait_time: int = 3
+    wait_time: int = 5
 ) -> str | None:
     """
     Takes a screenshot of a Reddit post using Playwright headless browser.
@@ -26,40 +26,60 @@ def take_reddit_screenshot(
     Returns:
         Path to screenshot file, or None on failure
     """
-    print(f"📸 Taking screenshot of Reddit post...")
+    print("📸 Taking screenshot of Reddit post...")
     
-    # Convert to old.reddit.com to avoid network security blocks
+    # Try multiple approaches to avoid blocking
+    # First try: old.reddit.com with compact view
     if 'reddit.com' in post_url and 'old.reddit.com' not in post_url:
+        # Use old Reddit with compact parameter to reduce clutter
         post_url = post_url.replace('reddit.com', 'old.reddit.com')
-        print(f"   Using old Reddit interface to avoid blocking")
+        if '?' not in post_url:
+            post_url += '?context=3'
+        print("   Using old Reddit interface to avoid blocking")
     
     print(f"   URL: {post_url}")
     
     try:
         with sync_playwright() as p:
-            # Launch browser in headless mode with args to avoid detection
+            # Launch browser with more stealth options
             browser = p.chromium.launch(
                 headless=True,
                 args=[
                     '--disable-blink-features=AutomationControlled',
                     '--no-sandbox',
-                    '--disable-web-security'
+                    '--disable-web-security',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--disable-gpu',
+                    '--window-size=1920,1080',
+                    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 ]
             )
             
-            # Create context with realistic desktop user agent
+            # Create context with realistic settings
             context = browser.new_context(
                 viewport={'width': width, 'height': height},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                locale='en-US',
+                timezone_id='America/New_York'
             )
             
             page = context.new_page()
             
+            # Set extra headers to look more like a real browser
+            page.set_extra_http_headers({
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Referer': 'https://www.google.com/'
+            })
+            
             # Navigate to Reddit post
             print("   Loading Reddit page...")
-            page.goto(post_url, wait_until='networkidle', timeout=30000)
+            page.goto(post_url, wait_until='networkidle', timeout=40000)
             
-            # Wait a bit for dynamic content
+            # Wait longer for dynamic content and to avoid rate limiting
+            print("   Waiting for page to fully render...")
             time.sleep(wait_time)
             
             # Try to close cookie banner if it appears
