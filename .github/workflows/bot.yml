@@ -7,9 +7,10 @@ on:
   # Allows manual triggering from the GitHub Actions tab
   workflow_dispatch:
   
-  # Runs on a CRON schedule: every 6 hours (at 0, 6, 12, 18 UTC)
-  schedule:
-    - cron: '0 */6 * * *'
+  # CRON schedule DISABLED - Run manually only
+  # Uncomment the lines below to re-enable automatic runs every 6 hours
+  # schedule:
+  #   - cron: '0 */6 * * *'
 
 jobs:
   build-and-upload:
