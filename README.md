@@ -1,26 +1,45 @@
-# Reddit-to-YouTube Shorts Bot 🤖
+# Reddit-to-YouTube Shorts Bot 🤖 (V3)
 
-A **100% free**, fully automated content pipeline that converts top Reddit posts into YouTube Shorts videos with AI narration.
+A **100% free**, fully automated content pipeline that converts top Reddit posts into YouTube Shorts videos with professional quality.
 
 ## 🎯 What This Bot Does
 
 1. **Scrapes** top posts from r/AskReddit using Reddit's official API
-2. **Generates** AI voice narration using Google Text-to-Speech
-3. **Creates** 9:16 vertical videos with burned-in subtitles
-4. **Uploads** to YouTube as private videos
-5. **Runs automatically** every 6 hours via GitHub Actions
-6. **Tracks used posts** to prevent duplicates
+2. **Captures** authentic Reddit post screenshots using Playwright
+3. **Downloads** copyright-free background videos from Pexels API
+4. **Generates** AI voice narration with edge-tts (Microsoft voices)
+5. **Creates** synchronized .srt subtitles burned into video
+6. **Composes** professional 9:16 videos using FFmpeg filter_complex
+7. **Uploads** to YouTube as public Shorts
+8. **Runs automatically** every 6 hours via GitHub Actions
+9. **Tracks used posts** to prevent duplicates
+
+## 🆕 V3 Features (Latest)
+
+**Professional Architecture:**
+- ✅ **Pexels API** - Free copyright-safe background videos (20k requests/month)
+- ✅ **Playwright** - Real Reddit screenshots (authentic appearance)
+- ✅ **edge-tts** - Natural Microsoft voices with subtitle generation
+- ✅ **FFmpeg filter_complex** - Professional multi-layer video composition
+- ✅ **Burned subtitles** - Accessible, engaging content
+- ✅ **1.3x speed audio** - Faster, more dynamic narration
+
+**Replaced fragile V2 dependencies:**
+- ❌ yt-dlp (Minecraft videos, copyright risk) → ✅ Pexels API
+- ❌ PIL/wkhtmltoimage (fake images) → ✅ Playwright screenshots
+- ❌ MoviePy (slow) → ✅ FFmpeg filter_complex
 
 ## ✅ Current Status
 
-**Working and tested!** All components are functional:
+**V3 fully implemented and ready to deploy!** All components:
 - ✅ Reddit API authentication
-- ✅ Post fetching with duplicate prevention
-- ✅ Google TTS audio generation
-- ✅ Video creation with FFmpeg
+- ✅ Pexels API integration
+- ✅ Playwright screenshot capture
+- ✅ edge-tts with subtitles
+- ✅ FFmpeg filter_complex composition
 - ✅ YouTube API authentication
-- ✅ Automated uploads
 - ✅ GitHub Actions automation
+- ✅ Complete documentation
 
 ## 🚀 Quick Start
 

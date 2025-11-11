@@ -7,3 +7,5 @@ praw
 moviepy
 yt-dlp
 Pillow
+edge-tts
+playwright
