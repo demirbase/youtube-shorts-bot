@@ -66,12 +66,17 @@ def compose_video_with_ffmpeg(
     print(f"   Subtitles: {subtitle_file}")
     print(f"   Audio: {audio_file}")
     
-    # Check if files exist
+    # Check if required files exist
     for file, name in [(background_video, "Background"), (screenshot_image, "Screenshot"), 
-                        (subtitle_file, "Subtitles"), (audio_file, "Audio")]:
+                        (audio_file, "Audio")]:
         if not os.path.exists(file):
             print(f"❌ {name} file not found: {file}")
             return None
+    
+    # Check subtitle file if provided
+    if subtitle_file and not os.path.exists(subtitle_file):
+        print(f"❌ Subtitle file not found: {subtitle_file}")
+        return None
     
     # Calculate screenshot overlay dimensions
     screenshot_width = int(target_width * screenshot_scale)
@@ -86,36 +91,46 @@ def compose_video_with_ffmpeg(
     else:
         screenshot_y = 50  # Default to top
     
-    # Escape subtitle path for FFmpeg (backslashes, colons, etc.)
-    subtitle_escaped = subtitle_file.replace("\\", "\\\\").replace(":", "\\:")
-    
     # Build FFmpeg filter_complex command
     # 
     # Filter chain explained:
     # [0:v] = background video input
     # 1. scale/crop to 9:16 (1080x1920) - crop from center
     # 2. overlay screenshot image at calculated position
-    # 3. burn subtitles at bottom with styling
+    # 3. burn subtitles at bottom with styling (if provided)
     # 4. output as [outv]
-    # [1:a] = audio input (already sped up)
+    # [2:a] = audio input (already sped up)
     
-    filter_complex = (
-        # Step 1: Scale and crop background to 9:16
+    # Build filter chain
+    filter_parts = []
+    
+    # Step 1: Scale and crop background to 9:16
+    filter_parts.append(
         f"[0:v]scale={target_width}:{target_height}:force_original_aspect_ratio=increase,"
-        f"crop={target_width}:{target_height}[bg]; "
-        
-        # Step 2: Prepare screenshot - scale to fit width
-        f"[1:v]scale={screenshot_width}:-1[screenshot]; "
-        
-        # Step 3: Overlay screenshot on background
-        f"[bg][screenshot]overlay=(W-w)/2:{screenshot_y}[videowithshot]; "
+        f"crop={target_width}:{target_height}[bg]"
+    )
+    
+    # Step 2: Prepare screenshot - scale to fit width
+    filter_parts.append(f"[1:v]scale={screenshot_width}:-1[screenshot]")
+    
+    # Step 3: Overlay screenshot on background
+    if subtitle_file:
+        # If we have subtitles, output to intermediate stream for subtitle burning
+        filter_parts.append(f"[bg][screenshot]overlay=(W-w)/2:{screenshot_y}[videowithshot]")
         
         # Step 4: Burn subtitles with styling
-        f"[videowithshot]subtitles='{subtitle_escaped}'"
-        f":force_style='FontName=Arial Bold,FontSize=24,PrimaryColour=&H00FFFFFF,"
-        f"OutlineColour=&H00000000,BorderStyle=3,Outline=2,Shadow=0,"
-        f"Alignment=2,MarginV=100'[outv]"
-    )
+        subtitle_escaped = subtitle_file.replace("\\", "\\\\").replace(":", "\\:")
+        filter_parts.append(
+            f"[videowithshot]subtitles='{subtitle_escaped}'"
+            f":force_style='FontName=Arial Bold,FontSize=24,PrimaryColour=&H00FFFFFF,"
+            f"OutlineColour=&H00000000,BorderStyle=3,Outline=2,Shadow=0,"
+            f"Alignment=2,MarginV=100'[outv]"
+        )
+    else:
+        # No subtitles - output directly
+        filter_parts.append(f"[bg][screenshot]overlay=(W-w)/2:{screenshot_y}[outv]")
+    
+    filter_complex = "; ".join(filter_parts)
     
     # Build full FFmpeg command
     command = [
