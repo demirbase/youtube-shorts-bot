@@ -34,7 +34,7 @@ def compose_video_with_ffmpeg(
     target_width: int = 1080,
     target_height: int = 1920,
     screenshot_position: str = "top",
-    screenshot_scale: float = 0.9
+    screenshot_scale: float = 0.65  # Reduced from 0.9 to show more background
 ) -> str | None:
     """
     Compose final Shorts video using FFmpeg filter_complex.
@@ -83,13 +83,13 @@ def compose_video_with_ffmpeg(
     
     # Calculate Y position based on position preference
     if screenshot_position == "top":
-        screenshot_y = 50  # 50 pixels from top
+        screenshot_y = 100  # Increased from 50 to 100 pixels for better visual balance
     elif screenshot_position == "center":
         screenshot_y = f"(H-h)/2"  # Centered
     elif screenshot_position == "bottom":
         screenshot_y = f"H-h-300"  # 300 pixels from bottom (leave room for subtitles)
     else:
-        screenshot_y = 50  # Default to top
+        screenshot_y = 100  # Default to top
     
     # Build FFmpeg filter_complex command
     # 

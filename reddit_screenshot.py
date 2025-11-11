@@ -27,17 +27,30 @@ def take_reddit_screenshot(
         Path to screenshot file, or None on failure
     """
     print(f"📸 Taking screenshot of Reddit post...")
+    
+    # Convert to old.reddit.com to avoid network security blocks
+    if 'reddit.com' in post_url and 'old.reddit.com' not in post_url:
+        post_url = post_url.replace('reddit.com', 'old.reddit.com')
+        print(f"   Using old Reddit interface to avoid blocking")
+    
     print(f"   URL: {post_url}")
     
     try:
         with sync_playwright() as p:
-            # Launch browser in headless mode
-            browser = p.chromium.launch(headless=True)
+            # Launch browser in headless mode with args to avoid detection
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    '--disable-blink-features=AutomationControlled',
+                    '--no-sandbox',
+                    '--disable-web-security'
+                ]
+            )
             
-            # Create context with mobile viewport (for vertical format)
+            # Create context with realistic desktop user agent
             context = browser.new_context(
                 viewport={'width': width, 'height': height},
-                user_agent='Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15'
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
             )
             
             page = context.new_page()

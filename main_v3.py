@@ -14,7 +14,7 @@ from ffmpeg_composer import compose_video_with_ffmpeg
 # --- V3 Configuration ---
 SUBREDDIT = "AskReddit"
 VIDEO_TITLE_PREFIX = "Reddit Asks: "
-AUDIO_SPEED_RATE = "+30%"  # edge-tts rate for 1.3x speed
+AUDIO_SPEED_RATE = "+10%"  # edge-tts rate for 1.1x speed (reduced from +30% for more natural pace)
 VOICE = VOICE_PRESETS["male_en"]  # Default voice
 PEXELS_SEARCH_QUERY = None  # None = random query
 
@@ -174,8 +174,8 @@ def main():
             temp_audio = "audio_temp.mp3"
             tts.save(temp_audio)
             
-            # Speed it up to 1.3x (like V2)
-            audio_file = speed_up_audio(temp_audio, "audio.mp3", speed=1.3)
+            # Speed it up to 1.1x (matching edge-tts +10% rate)
+            audio_file = speed_up_audio(temp_audio, "audio.mp3", speed=1.1)
             subtitle_file = None  # No subtitles with gTTS
             
             if not audio_file:
