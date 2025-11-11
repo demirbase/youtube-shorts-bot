@@ -45,12 +45,13 @@ def speed_up_audio(input_wav: str, output_wav: str, speed: float = 1.3) -> str |
             output_wav
         ]
         
-        subprocess.run(command, check=True, capture_output=True, stderr=subprocess.PIPE)
+        subprocess.run(command, check=True, capture_output=True)
         print(f"✅ Successfully sped up audio: {output_wav}")
         return output_wav
         
     except subprocess.CalledProcessError as e:
-        print(f"❌ Error speeding up audio: {e.stderr.decode()}")
+        stderr_output = e.stderr.decode() if e.stderr else "No error details"
+        print(f"❌ Error speeding up audio: {stderr_output}")
         return None
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
