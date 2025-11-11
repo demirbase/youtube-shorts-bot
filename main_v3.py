@@ -274,7 +274,7 @@ def main():
         sys.exit(1)
     
     # Upload video
-    success = youtube_uploader.upload_video(
+    upload_result = youtube_uploader.upload_video(
         youtube_service=youtube_service,
         file_path=final_video,
         title=youtube_title,
@@ -282,13 +282,38 @@ def main():
         tags=VIDEO_TAGS
     )
     
-    if success:
+    if upload_result is True:
         print("✅ Video uploaded successfully!")
         
         # Mark post as used
         with open(reddit_scraper.USED_POSTS_FILE, 'a') as f:
             f.write(f"{post_data['id']}\n")
         print(f"   Post marked as used: {post_data['id']}")
+        
+    elif upload_result == "quota_exceeded":
+        print("\n⚠️  YouTube quota exceeded - saving video for manual upload...")
+        
+        # Save video with metadata for manual upload later
+        saved_path = youtube_uploader.save_video_for_manual_upload(
+            video_path=final_video,
+            title=youtube_title,
+            description=youtube_description,
+            tags=VIDEO_TAGS,
+            post_id=post_data['id']
+        )
+        
+        if saved_path:
+            print("✅ Video saved successfully for later upload!")
+            
+            # Still mark post as used to avoid retrying
+            with open(reddit_scraper.USED_POSTS_FILE, 'a') as f:
+                f.write(f"{post_data['id']}\n")
+            print(f"   Post marked as used: {post_data['id']}")
+            print("\n💡 Tip: Check the 'pending_uploads' folder for videos to upload manually.")
+            print("   Quota resets at midnight Pacific Time (8-9 AM UTC).")
+        else:
+            print("❌ Failed to save video for manual upload.")
+            sys.exit(1)
     else:
         print("❌ Upload failed.")
         sys.exit(1)

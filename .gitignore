@@ -20,6 +20,7 @@ token.json
 *.mp4
 *.srt
 output.*
+pending_uploads/
 
 # IDE
 .vscode/

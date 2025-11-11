@@ -2,6 +2,9 @@
 # Handles Google API authentication and video uploading.
 
 import os
+import shutil
+import json
+from datetime import datetime
 import google.oauth2.credentials
 import googleapiclient.discovery
 import googleapiclient.errors
@@ -11,6 +14,62 @@ from googleapiclient.http import MediaFileUpload
 CLIENT_SECRETS_FILE = "client_secrets.json"
 TOKEN_FILE = "token.json"
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+PENDING_UPLOADS_DIR = "pending_uploads"
+
+def save_video_for_manual_upload(video_path: str, title: str, description: str, tags: list, post_id: str) -> str | None:
+    """
+    Saves a video and its metadata for manual upload later.
+    
+    Args:
+        video_path: Path to the video file
+        title: Video title
+        description: Video description
+        tags: List of tags
+        post_id: Reddit post ID
+        
+    Returns:
+        Path to saved video or None on failure
+    """
+    try:
+        # Create pending uploads directory if it doesn't exist
+        os.makedirs(PENDING_UPLOADS_DIR, exist_ok=True)
+        
+        # Create filename with timestamp and post ID
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_title = "".join(c for c in title[:50] if c.isalnum() or c in (' ', '-', '_')).strip()
+        video_filename = f"{timestamp}_{post_id}_{safe_title}.mp4"
+        metadata_filename = f"{timestamp}_{post_id}_metadata.json"
+        
+        video_dest = os.path.join(PENDING_UPLOADS_DIR, video_filename)
+        metadata_dest = os.path.join(PENDING_UPLOADS_DIR, metadata_filename)
+        
+        # Copy video file
+        shutil.copy2(video_path, video_dest)
+        
+        # Save metadata
+        metadata = {
+            "post_id": post_id,
+            "title": title,
+            "description": description,
+            "tags": tags,
+            "created_at": timestamp,
+            "original_video": video_path,
+            "saved_video": video_dest
+        }
+        
+        with open(metadata_dest, 'w', encoding='utf-8') as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)
+        
+        print(f"\n📁 Video saved for manual upload:")
+        print(f"   Video: {video_dest}")
+        print(f"   Metadata: {metadata_dest}")
+        print(f"   Size: {os.path.getsize(video_dest) / (1024*1024):.2f} MB")
+        
+        return video_dest
+        
+    except Exception as e:
+        print(f"❌ Error saving video for manual upload: {e}")
+        return None
 
 def get_authenticated_service() -> googleapiclient.discovery.Resource | None:
     """
@@ -74,7 +133,7 @@ def upload_video(youtube_service: googleapiclient.discovery.Resource,
                  file_path: str, 
                  title: str, 
                  description: str, 
-                 tags: list) -> bool:
+                 tags: list) -> bool | str:
     """
     Uploads a video file to YouTube.
 
@@ -86,7 +145,9 @@ def upload_video(youtube_service: googleapiclient.discovery.Resource,
         tags: A list of tags for the video.
 
     Returns:
-        True if upload was successful, False otherwise.
+        True if upload was successful
+        False if upload failed
+        "quota_exceeded" if quota limit reached (video saved, post should be marked as used)
     """
     try:
         print(f"Uploading video '{title}' to YouTube...")
@@ -124,6 +185,16 @@ def upload_video(youtube_service: googleapiclient.discovery.Resource,
 
     except googleapiclient.errors.HttpError as e:
         print(f"An HTTP error {e.resp.status} occurred:\n{e.content}")
+        
+        # Check if it's a quota exceeded error
+        if e.resp.status == 400 and b'uploadLimitExceeded' in e.content:
+            print("\n⚠️  YouTube Upload Quota Exceeded!")
+            print("   This is a temporary limit that resets at midnight Pacific Time.")
+            print("   The video has been created and saved successfully.")
+            print(f"   You can manually upload: {file_path}")
+            print("   Marking post as used to avoid retry.")
+            return "quota_exceeded"  # Special return value
+        
         return False
     except Exception as e:
         print(f"An error occurred during upload: {e}")
