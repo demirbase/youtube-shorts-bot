@@ -4,3 +4,8 @@ google-api-python-client
 google-auth-oauthlib
 google-auth-httplib2
 praw
+moviepy
+yt-dlp
+Pillow
+edge-tts
+playwright

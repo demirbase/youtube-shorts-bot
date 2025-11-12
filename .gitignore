@@ -19,7 +19,9 @@ token.json
 *.mp3
 *.mp4
 *.srt
+*.png
 output.*
+pending_uploads/
 
 # IDE
 .vscode/

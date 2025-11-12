@@ -39,12 +39,34 @@ jobs:
         # Uses a well-regarded community action
         uses: AnimMouse/setup-ffmpeg@v1
 
-      - name: 4. Install Python dependencies
+      - name: 4. Install System Dependencies for Playwright
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 \
+            libnspr4 \
+            libatk1.0-0 \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libdrm2 \
+            libxkbcommon0 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxfixes3 \
+            libxrandr2 \
+            libgbm1 \
+            libasound2t64
+
+      - name: 5. Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          
+      - name: 6. Install Playwright Browsers
+        run: |
+          playwright install chromium --with-deps
 
-      - name: 5. Load Secrets into Environment
+      - name: 7. Load Secrets into Environment
         # This step securely loads GitHub secrets and makes them
         # available as environment variables for the main.py script.
         # All secrets are passed directly as environment variables to the next step
@@ -56,10 +78,11 @@ jobs:
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
           REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
           echo "✅ Secrets loaded into environment variables"
 
-      - name: 6. Run the Python Bot
+      - name: 8. Run the Python Bot
         # This executes the main orchestration script.
         # Secrets are passed directly as environment variables
         env:
@@ -69,10 +92,21 @@ jobs:
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
           REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
           python main.py
 
-      - name: 7. Commit and Push State File
+      - name: 9. Upload Pending Videos as Artifacts
+        # If quota exceeded, upload videos for manual download
+        if: always()  # Run even if previous steps failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: pending-videos-${{ github.run_number }}
+          path: pending_uploads/
+          retention-days: 30  # Keep artifacts for 30 days
+          if-no-files-found: ignore  # Don't fail if no videos
+
+      - name: 10. Commit and Push State File
         # This block saves the 'used_posts.txt' file back to the repo,
         # ensuring the bot does not reuse posts.
         run: |
