@@ -17,6 +17,7 @@ from reddit_fetcher import authenticate_reddit, fetch_popular_post
 from reddit_frame_creator import create_frame_for_post
 from pexels_dynamic import get_background_for_duration
 from subtitle_generator_v2 import generate_audio_with_flow_sync, VOICE_PRESETS_V2
+from subtitle_generator_v3 import generate_audio_with_flow_gtts  # Fallback
 from ffmpeg_composer_v2 import compose_video_v2
 import youtube_uploader
 
@@ -86,6 +87,7 @@ def main():
         print("📋 Step 2/6: Generating audio with flow-based subtitles...")
         print("   Flow: Question first → Answers with pauses")
         
+        # Try edge-tts first, fallback to gTTS if it fails
         result = generate_audio_with_flow_sync(
             title=title,
             comments=comments,
@@ -97,7 +99,18 @@ def main():
         )
         
         if not result:
-            print("❌ Failed to generate audio/subtitles")
+            print("⚠️  edge-tts failed, trying fallback gTTS...")
+            result = generate_audio_with_flow_gtts(
+                title=title,
+                comments=comments,
+                audio_file="narration.mp3",
+                subtitle_file="subtitles.srt",
+                lang="en",
+                pause_between=1.0
+            )
+        
+        if not result:
+            print("❌ Failed to generate audio/subtitles with both methods")
             sys.exit(1)
         
         audio_file, subtitle_file = result
