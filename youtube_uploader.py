@@ -73,8 +73,8 @@ def save_video_for_manual_upload(video_path: str, title: str, description: str, 
 
 def get_authenticated_service() -> googleapiclient.discovery.Resource | None:
     """
-    Authenticates with the Google API using the token.json and client_secrets.json
-    files created by main.py in the Actions environment.
+    Authenticates with the Google API using credentials from environment variables
+    or files (token.json and client_secrets.json).
 
     Returns:
         An authenticated YouTube API service object, or None on failure.
@@ -83,37 +83,38 @@ def get_authenticated_service() -> googleapiclient.discovery.Resource | None:
     credentials = None
     try:
         import json
+        import os
         
-        # Load credentials from token.json
-        with open(TOKEN_FILE, 'r') as f:
-            token_data = json.load(f)
+        # Try to load from environment variables first (GitHub Actions)
+        token_content = os.environ.get('YOUTUBE_TOKEN_CONTENT')
+        client_secrets_content = os.environ.get('CLIENT_SECRETS_CONTENT')
+        
+        if token_content and client_secrets_content:
+            print("Using credentials from environment variables...")
+            token_data = json.loads(token_content)
+            client_data = json.loads(client_secrets_content)
+            client_config = client_data.get('installed', client_data.get('web', {}))
+        else:
+            print("Using credentials from files...")
+            # Load credentials from token.json
+            with open(TOKEN_FILE, 'r') as f:
+                token_data = json.load(f)
+            with open(CLIENT_SECRETS_FILE, 'r') as f:
+                client_data = json.load(f)
+                client_config = client_data.get('installed', client_data.get('web', {}))
         
         # Create credentials object from the token data
         credentials = google.oauth2.credentials.Credentials(
             token=token_data.get('token'),
             refresh_token=token_data.get('refresh_token'),
-            token_uri=token_data.get('token_uri'),
-            client_id=token_data.get('client_id'),
-            client_secret=token_data.get('client_secret'),
-            scopes=token_data.get('scopes')
+            token_uri=token_data.get('token_uri', 'https://oauth2.googleapis.com/token'),
+            client_id=token_data.get('client_id') or client_config.get('client_id'),
+            client_secret=token_data.get('client_secret') or client_config.get('client_secret'),
+            scopes=token_data.get('scopes', SCOPES)
         )
         
         if not credentials or not credentials.valid:
             if credentials and credentials.expired and credentials.refresh_token:
-                # Need to use client_secrets.json to refresh
-                from google.oauth2.credentials import Credentials
-                from google_auth_oauthlib.flow import InstalledAppFlow
-                
-                # This is a bit of a workaround for the non-interactive env
-                # We load the client secrets to get the client_id and client_secret
-                import json
-                with open(CLIENT_SECRETS_FILE, 'r') as f:
-                    client_config = json.load(f)['installed']
-
-                credentials = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-                credentials.client_id = client_config['client_id']
-                credentials.client_secret = client_config['client_secret']
-                
                 print("Refreshing expired credentials...")
                 from google.auth.transport.requests import Request
                 credentials.refresh(Request())
