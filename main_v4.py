@@ -263,7 +263,7 @@ def main():
             print(f"   Post ID: {post_id}")
             
             # Mark post as used
-            from reddit_scraper import mark_post_as_used
+            from reddit_fetcher import mark_post_as_used
             mark_post_as_used(post_id)
             
         else:
