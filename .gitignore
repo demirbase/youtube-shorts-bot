@@ -20,8 +20,21 @@ token.json
 *.mp4
 *.srt
 *.png
+*.jpg
+*.jpeg
+*.webm
 output.*
+final_video.*
+temp_*
+background_*
+reddit_frame_*
 pending_uploads/
+
+# Test outputs
+test_*.png
+test_*.mp4
+demo_*.png
+integration_test.*
 
 # IDE
 .vscode/
